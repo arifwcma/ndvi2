@@ -38,9 +38,13 @@ router.get("/", (req, res) => {
 
   ndvi.getMap({ min: -1, max: 1, palette: ["brown", "white", "green"] }, (mapObj, err) => {
     if (err) return res.status(500).send(err);
-    const tileUrl = `https://earthengine.googleapis.com/map/${mapObj.mapid}/{z}/{x}/{y}?token=${mapObj.token}`;
+    let tileUrl = `https://earthengine.googleapis.com/map/${mapObj.mapid}/{z}/{x}/{y}.png`;
+    if (mapObj.token) {
+      tileUrl += `?token=${mapObj.token}`;
+    }
     res.json({ mapid: mapObj.mapid, token: mapObj.token, tileUrl, start, end });
   });
+
 });
 
 module.exports = router;
