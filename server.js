@@ -17,6 +17,10 @@ ee.data.authenticateViaPrivateKey(privateKey, () => {
 const ndviRoutes = require("./routes/ndvi");
 app.use("/ndvi", ndviRoutes);
 
+const valueRoutes = require("./routes/value");
+app.use("/ndvi/value", valueRoutes);
+
 app.listen(3001, () =>
   console.log("Server running on http://localhost:3001")
 );
+
