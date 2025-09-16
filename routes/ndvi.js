@@ -17,8 +17,8 @@ router.get("/", (req, res) => {
       [143.363961290248056, -37.368096687169292],
       [143.363961290248056, -35.656805505972457],
       [140.963783171735315, -35.656805505972457],
-      [140.963783171735315, -37.368096687169292],
-    ],
+      [140.963783171735315, -37.368096687169292]
+    ]
   ]);
 
   const maskClouds = (img) => {
@@ -27,22 +27,20 @@ router.get("/", (req, res) => {
     return img.updateMask(mask);
   };
 
-  const ndviVis = ee
+  const ndvi = ee
     .ImageCollection("COPERNICUS/S2_SR_HARMONIZED")
     .filterBounds(region)
     .filterDate(start, end)
     .map(maskClouds)
     .map((img) => img.normalizedDifference(["B8", "B4"]).rename("NDVI"))
     .mean()
-    .visualize({ min: -1, max: 1, palette: ["brown", "white", "green"] });
+    .clip(region);
 
-  ndviVis.getThumbURL(
-    { dimensions: 1024, region, format: "png" },
-    (url, error) => {
-      if (error) res.status(500).send(error);
-      else res.json({ url, start, end });
-    }
-  );
+  ndvi.getMap({ min: -1, max: 1, palette: ["brown", "white", "green"] }, (mapObj, err) => {
+    if (err) return res.status(500).send(err);
+    const tileUrl = `https://earthengine.googleapis.com/map/${mapObj.mapid}/{z}/{x}/{y}?token=${mapObj.token}`;
+    res.json({ mapid: mapObj.mapid, token: mapObj.token, tileUrl, start, end });
+  });
 });
 
 module.exports = router;
