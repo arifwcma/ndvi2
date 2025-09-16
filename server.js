@@ -4,6 +4,10 @@ const ee = require("@google/earthengine");
 const fs = require("fs");
 
 const app = express();
+
+const cors = require("cors");
+app.use(cors());
+
 app.use(bodyParser.json());
 
 const privateKey = JSON.parse(fs.readFileSync("service-account.json"));
