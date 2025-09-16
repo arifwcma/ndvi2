@@ -20,6 +20,10 @@ app.use("/ndvi", ndviRoutes);
 const valueRoutes = require("./routes/value");
 app.use("/ndvi/value", valueRoutes);
 
+const valueMonthRoutes = require("./routes/value_month");
+app.use("/ndvi/value_month", valueMonthRoutes);
+
+
 app.listen(3001, () =>
   console.log("Server running on http://localhost:3001")
 );
