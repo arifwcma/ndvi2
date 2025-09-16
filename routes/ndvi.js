@@ -36,14 +36,31 @@ router.get("/", (req, res) => {
     .mean()
     .clip(region);
 
-  ndvi.getMap({ min: -1, max: 1, palette: ["brown", "white", "green"] }, (mapObj, err) => {
-    if (err) return res.status(500).send(err);
-    let tileUrl = `https://earthengine.googleapis.com/map/${mapObj.mapid}/{z}/{x}/{y}.png`;
-    if (mapObj.token) {
-      tileUrl += `?token=${mapObj.token}`;
+  // ndvi.getMap({ min: -1, max: 1, palette: ["brown", "white", "green"] }, (mapObj, err) => {
+  //   if (err) return res.status(500).send(err);
+  //   let tileUrl = `https://earthengine.googleapis.com/${mapObj.mapid}/{z}/{x}/{y}.png`;
+  //   if (mapObj.token) {
+  //     tileUrl += `?token=${mapObj.token}`;
+  //   }
+  //   res.json({ mapid: mapObj.mapid, token: mapObj.token, tileUrl, start, end });
+  // });
+
+  ndvi.getThumbURL(
+    {
+      region,
+      dimensions: 512,
+      format: "png",
+      min: -1,
+      max: 1,
+      palette: ["brown", "white", "green"]
+    },
+    (url, err) => {
+      if (err) return res.status(500).send(err);
+      res.json({ thumb: url, start, end });
     }
-    res.json({ mapid: mapObj.mapid, token: mapObj.token, tileUrl, start, end });
-  });
+  );
+
+
 
 });
 
