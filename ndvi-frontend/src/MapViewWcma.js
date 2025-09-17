@@ -7,7 +7,7 @@ function MapViewWcma() {
   const [wcmaBoundary, setWcmaBoundary] = useState(null)
 
   useEffect(() => {
-    fetch("http://localhost:3001/ndvi/wcma")
+    fetch("${process.env.REACT_APP_BASE_URL}/ndvi/wcma")
       .then(res => res.json())
       .then(data => setWcmaTileUrl(data.tileUrl))
 

@@ -1,4 +1,4 @@
 export async function fetchRaceNdvi() {
-  const res = await fetch("http://localhost:3001/ndvi/race");
+  const res = await fetch("${process.env.REACT_APP_BASE_URL}/ndvi/race");
   return await res.json();
 }

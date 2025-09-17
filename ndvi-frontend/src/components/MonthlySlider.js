@@ -60,7 +60,7 @@ function MonthlySlider() {
   const fetchNdvi = (monthsBack) => {
     const { year, month, label } = getMonthYear(monthsBack)
     setLabel(label)
-    fetch(`http://localhost:3001/ndvi/wcma_monthly?year=${year}&month=${month}`)
+    fetch(`${process.env.REACT_APP_BASE_URL}/ndvi/wcma_monthly?year=${year}&month=${month}`)
       .then(res => res.json())
       .then(data => setTileUrl(data.tileUrl))
   }
@@ -127,7 +127,7 @@ function MonthlySlider() {
             <ClickHandler
               onClick={(latlng) => {
                 fetch(
-                  `http://localhost:3001/ndvi/wcma_sample?year=${getMonthYear(maxPast - offset).year}&month=${getMonthYear(maxPast - offset).month}&lat=${latlng.lat}&lon=${latlng.lng}`
+                  `${process.env.REACT_APP_BASE_URL}/ndvi/wcma_sample?year=${getMonthYear(maxPast - offset).year}&month=${getMonthYear(maxPast - offset).month}&lat=${latlng.lat}&lon=${latlng.lng}`
                 )
                   .then(res => res.json())
                   .then(data => {
