@@ -1,0 +1,2 @@
+ssh -i "C:\Users\m.rahman\Downloads\Q1.pem" ubuntu@3.25.234.62
+
