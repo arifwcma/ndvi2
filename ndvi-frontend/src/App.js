@@ -1,8 +1,8 @@
 import React from "react"
-import MapViewWcma from "./MapViewWcma"
+import MonthlySlider from "./components/MonthlySlider"
 
 function App() {
-  return <MapViewWcma />
+  return <MonthlySlider />
 }
 
 export default App
