@@ -1,25 +1,22 @@
 import React, { useEffect, useState } from "react";
 import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
+import { fetchRaceNdvi } from "./services/api";
 
 function MapView() {
-  const [boundary, setBoundary] = useState(null);
+  const [tileUrl, setTileUrl] = useState(null);
+  const [geojson, setGeojson] = useState(null);
 
   useEffect(() => {
-    fetch("http://localhost:3001/boundary")
-      .then((res) => res.json())
-      .then((data) => setBoundary(data));
+    fetchRaceNdvi().then(data => setTileUrl(data.tileUrl));
+    fetch("/data/horsham_4326.geojson").then(r => r.json()).then(setGeojson);
   }, []);
 
   return (
-    <MapContainer center={[-36.8, 142.0]} zoom={7} style={{ height: "100vh", width: "100%" }}>
+    <MapContainer center={[-36.71, 142.19]} zoom={14} style={{ height: "100vh", width: "100%" }}>
       <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-      {boundary && (
-        <GeoJSON
-          data={boundary}
-          style={{ color: "black", weight: 2, fillOpacity: 0 }}
-        />
-      )}
+      {tileUrl && <TileLayer url={tileUrl} />}
+      {geojson && <GeoJSON data={geojson} style={{ color: "black", weight: 2, fillOpacity: 0 }} />}
     </MapContainer>
   );
 }

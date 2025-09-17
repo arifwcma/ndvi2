@@ -1,7 +1,4 @@
-export function fetchNdvi(year, month) {
-  return fetch(`http://localhost:3001/ndvi?year=${year}&month=${month}`)
-    .then(res => {
-      if (!res.ok) throw new Error("Failed to fetch NDVI");
-      return res.json();
-    });
+export async function fetchRaceNdvi() {
+  const res = await fetch("http://localhost:3001/ndvi/race");
+  return await res.json();
 }

@@ -1,0 +1,8 @@
+{
+"type": "FeatureCollection",
+"name": "boundary_4326_2d",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "Name": "race", "description": null, "timestamp": null, "begin": null, "end": null, "altitudeMode": null, "tessellate": -1, "extrude": 0, "visibility": -1, "drawOrder": null, "icon": null }, "geometry": { "type": "Polygon", "coordinates": [ [ [ 142.186991379632587, -36.717810419098328, 0.0 ], [ 142.194976824028799, -36.717726973086222, 0.0 ], [ 142.19598965636979, -36.711262290534158, 0.0 ], [ 142.186649923553603, -36.71168923348776, 0.0 ], [ 142.186991379632587, -36.717810419098328, 0.0 ] ] ] } }
+]
+}

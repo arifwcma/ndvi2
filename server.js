@@ -36,6 +36,11 @@ app.use("/toy/tiles", tilesToy);
 const boundary = require("./routes/boundary");
 app.use("/boundary", boundary);
 
+const ndviMonth = require("./routes/ndvi_month");
+app.use("/ndvi/month", ndviMonth);
+
+const ndviRace = require("./routes/ndvi_race");
+app.use("/ndvi/race", ndviRace);
 
 
 app.listen(3001, () =>
