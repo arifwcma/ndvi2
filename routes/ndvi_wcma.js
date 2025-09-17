@@ -27,7 +27,11 @@ router.get("/", (req, res) => {
   })
 
   const mean = collection.mean().clip(aoi)
-  const vis = { min: -1, max: 1, palette: ["brown", "yellow", "green"] }
+  const vis = { 
+    min: -1, 
+    max: 1, 
+    palette: ["blue", "white", "yellow", "green", "darkgreen"] 
+  }
 
   mean.getMap(vis, (mapObj, err) => {
     if (err) return res.status(500).send(err)
