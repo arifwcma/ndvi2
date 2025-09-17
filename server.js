@@ -27,6 +27,16 @@ app.use("/ndvi/value", valueRoutes);
 const valueMonthRoutes = require("./routes/value_month");
 app.use("/ndvi/value_month", valueMonthRoutes);
 
+const tilesTest = require("./routes/tiles_test");
+app.use("/test/tiles", tilesTest);
+
+const tilesToy = require("./routes/tiles_toy");
+app.use("/toy/tiles", tilesToy);
+
+const boundary = require("./routes/boundary");
+app.use("/boundary", boundary);
+
+
 
 app.listen(3001, () =>
   console.log("Server running on http://localhost:3001")

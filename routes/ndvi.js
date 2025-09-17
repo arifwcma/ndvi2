@@ -34,34 +34,25 @@ router.get("/", (req, res) => {
     .map(maskClouds)
     .map((img) => img.normalizedDifference(["B8", "B4"]).rename("NDVI"))
     .mean()
+    .select("NDVI") // ensure only NDVI band
     .clip(region);
 
-  // ndvi.getMap({ min: -1, max: 1, palette: ["brown", "white", "green"] }, (mapObj, err) => {
-  //   if (err) return res.status(500).send(err);
-  //   let tileUrl = `https://earthengine.googleapis.com/${mapObj.mapid}/{z}/{x}/{y}.png`;
-  //   if (mapObj.token) {
-  //     tileUrl += `?token=${mapObj.token}`;
-  //   }
-  //   res.json({ mapid: mapObj.mapid, token: mapObj.token, tileUrl, start, end });
-  // });
+  const vis = { min: -1, max: 1, palette: ["brown", "white", "green"] };
+  const ndviVis = ndvi.visualize(vis);
 
-  ndvi.getThumbURL(
-    {
-      region,
-      dimensions: 512,
-      format: "png",
-      min: -1,
-      max: 1,
-      palette: ["brown", "white", "green"]
-    },
-    (url, err) => {
-      if (err) return res.status(500).send(err);
-      res.json({ thumb: url, start, end });
-    }
-  );
+  ndviVis.getMap({}, (mapObj, err) => {
+    if (err) return res.status(500).send(err);
 
+    const tileUrl = `https://earthengine.googleapis.com/${mapObj.mapid}/{z}/{x}/{y}.png`;
 
-
+    ndviVis.getThumbURL(
+      { region, dimensions: 512, format: "png", ...vis },
+      (thumbUrl, thumbErr) => {
+        if (thumbErr) return res.status(500).send(thumbErr);
+        res.json({ tileUrl, thumbUrl, start, end });
+      }
+    );
+  });
 });
 
 module.exports = router;
