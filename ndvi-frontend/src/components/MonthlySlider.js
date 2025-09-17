@@ -6,9 +6,11 @@ import L from "leaflet"
 delete L.Icon.Default.prototype._getIconUrl
 
 L.Icon.Default.mergeOptions({
-  iconUrl: "/images/marker-icon.png",
-  shadowUrl: "/images/marker-shadow.png"
+    iconRetinaUrl: "/marker-icon-2x.png",
+    iconUrl: "/marker-icon.png",
+    shadowUrl: "/marker-shadow.png"
 })
+
 
 const maxPast = 72
 
