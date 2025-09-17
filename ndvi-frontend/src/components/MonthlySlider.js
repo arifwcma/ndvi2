@@ -5,7 +5,7 @@ import "leaflet/dist/leaflet.css"
 function MonthlySlider() {
   const [tileUrl, setTileUrl] = useState(null)
   const [boundary, setBoundary] = useState(null)
-  const [offset, setOffset] = useState(84)
+  const [offset, setOffset] = useState(0)
   const [label, setLabel] = useState("")
 
   const getMonthYear = (monthsBack) => {
@@ -44,7 +44,7 @@ function MonthlySlider() {
         onChange={e => {
           const v = parseInt(e.target.value)
           setOffset(v)
-          fetchNdvi(84 - v)
+          fetchNdvi(v)
         }}
       />
       <MapContainer center={[-36.7, 142.0]} zoom={7} style={{ height: "90vh" }}>
