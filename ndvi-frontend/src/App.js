@@ -1,8 +1,8 @@
-import React from "react";
-import MapView from "./MapView";
+import React from "react"
+import MapViewWcma from "./MapViewWcma"
 
 function App() {
-  return <MapView />;
+  return <MapViewWcma />
 }
 
-export default App;
+export default App

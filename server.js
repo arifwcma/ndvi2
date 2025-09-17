@@ -42,6 +42,9 @@ app.use("/ndvi/month", ndviMonth);
 const ndviRace = require("./routes/ndvi_race");
 app.use("/ndvi/race", ndviRace);
 
+const ndviWcma = require("./routes/ndvi_wcma");
+app.use("/ndvi/wcma", ndviWcma);
+
 
 app.listen(3001, () =>
   console.log("Server running on http://localhost:3001")
