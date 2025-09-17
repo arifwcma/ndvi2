@@ -3,6 +3,13 @@ import { MapContainer, TileLayer, GeoJSON, useMap, Marker, Popup } from "react-l
 import "leaflet/dist/leaflet.css"
 import L from "leaflet"
 
+delete L.Icon.Default.prototype._getIconUrl
+
+L.Icon.Default.mergeOptions({
+  iconUrl: "/images/marker-icon.png",
+  shadowUrl: "/images/marker-shadow.png"
+})
+
 const maxPast = 72
 
 function BoundaryLayer({ data }) {
