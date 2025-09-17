@@ -46,8 +46,7 @@ const ndviWcma = require("./routes/ndvi_wcma");
 app.use("/ndvi/wcma", ndviWcma);
 
 const ndviWcmaMonthly = require("./routes/ndvi_wcma_monthly")
-app.use("/ndvi_wcma_monthly", ndviWcmaMonthly)
-
+app.use("/ndvi/wcma_monthly", ndviWcmaMonthly)
 
 app.listen(3001, () =>
   console.log("Server running on http://localhost:3001")
