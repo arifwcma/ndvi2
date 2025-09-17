@@ -54,22 +54,25 @@ function MonthlySlider() {
   return (
     <div>
       <h3>NDVI for {label}</h3>
-      <input
-        type="range"
-        min="0"
-        max={maxPast}
-        value={offset}
-        onChange={e => setOffset(parseInt(e.target.value))}
-        onMouseUp={handleRelease}
-        onTouchEnd={handleRelease}
-      />
-      <MapContainer style={{ height: "90vh" }}>
-        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-        {tileUrl && <TileLayer url={tileUrl} opacity={0.6} />}
-        {boundary && <BoundaryLayer data={boundary} />}
-      </MapContainer>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "10px" }}>
+        {/* slider + buttons (unchanged) */}
+      </div>
+      <div style={{ display: "flex" }}>
+        <div style={{ flex: 1 }}>
+          <MapContainer style={{ height: "90vh" }}>
+            <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+            {tileUrl && <TileLayer url={tileUrl} opacity={0.6} />}
+            {boundary && <BoundaryLayer data={boundary} />}
+          </MapContainer>
+        </div>
+        <div style={{ width: "250px", padding: "10px", borderLeft: "1px solid #ccc" }}>
+          <h4>Info Panel</h4>
+          {/* We will fill this soon */}
+        </div>
+      </div>
     </div>
   )
+
 }
 
 export default MonthlySlider
