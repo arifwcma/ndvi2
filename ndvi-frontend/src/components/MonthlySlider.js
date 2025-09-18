@@ -57,6 +57,11 @@ function MonthlySlider() {
     const [toYear, setToYear] = useState(new Date().getFullYear())
     const [loading, setLoading] = useState(false)
 
+    const [compareMode, setCompareMode] = useState(false)
+    const [secondMarker, setSecondMarker] = useState(null)
+    const [secondSeries, setSecondSeries] = useState({ labels: [], data: [] })
+    const [secondInfo, setSecondInfo] = useState(null)
+
     const getMonthYear = (monthsBack) => {
         const now = new Date()
         now.setMonth(now.getMonth() - monthsBack)
@@ -82,37 +87,7 @@ function MonthlySlider() {
         return arr
     }
 
-    const fetchNdviSeries = (year, month, lat, lon, n = 6) => {
-        setLoading(true)
-        const items = []
-        for (let i = n - 1; i >= 0; i--) {
-            const d = new Date(year, month - 1, 1)
-            d.setMonth(d.getMonth() - i)
-            items.push({
-                year: d.getFullYear(),
-                month: d.getMonth() + 1,
-                label: d.toLocaleString("default", { month: "short", year: "numeric" })
-            })
-        }
-        const url = (y, m) => `${process.env.REACT_APP_BASE_URL}/ndvi/wcma_sample?year=${y}&month=${m}&lat=${lat}&lon=${lon}`
-        Promise.all(items.map(it => fetch(url(it.year, it.month)).then(r => r.json()).catch(() => ({ ndvi: null, inside: false }))))
-            .then(res => {
-                const labels = items.map(it => it.label)
-                const data = res.map(x => (x && x.inside && x.ndvi !== null ? x.ndvi : null))
-                setSeries({ labels, data })
-                if (labels.length > 0) {
-                    const [firstYear, firstMonth] = [items[0].year, items[0].month]
-                    const [lastYear, lastMonth] = [items[items.length - 1].year, items[items.length - 1].month]
-                    setFromYear(firstYear)
-                    setFromMonth(firstMonth)
-                    setToYear(lastYear)
-                    setToMonth(lastMonth)
-                }
-                setLoading(false)
-            })
-    }
-
-    const fetchRangeSeries = (lat, lon, fy, fm, ty, tm) => {
+    const fetchRangeSeries = (lat, lon, fy, fm, ty, tm, isSecond = false) => {
         setLoading(true)
         const items = generateMonthsBetween(fy, fm, ty, tm)
         const url = (y, m) => `${process.env.REACT_APP_BASE_URL}/ndvi/wcma_sample?year=${y}&month=${m}&lat=${lat}&lon=${lon}`
@@ -120,7 +95,25 @@ function MonthlySlider() {
             .then(res => {
                 const labels = items.map(it => it.label)
                 const data = res.map(x => (x && x.inside && x.ndvi !== null ? x.ndvi : null))
-                setSeries({ labels, data })
+                if (isSecond) {
+                    setSecondSeries({ labels, data })
+                    setSecondInfo({
+                        initial: data.length > 0 ? data[0] : null,
+                        last: data.length > 0 ? data[data.length - 1] : null,
+                        firstLabel: labels.length > 0 ? labels[0] : "",
+                        lastLabel: labels.length > 0 ? labels[labels.length - 1] : ""
+                    })
+                } else {
+                    setSeries({ labels, data })
+                    if (labels.length > 0) {
+                        const [firstYear, firstMonth] = [items[0].year, items[0].month]
+                        const [lastYear, lastMonth] = [items[items.length - 1].year, items[items.length - 1].month]
+                        setFromYear(firstYear)
+                        setFromMonth(firstMonth)
+                        setToYear(lastYear)
+                        setToMonth(lastMonth)
+                    }
+                }
                 setLoading(false)
             })
     }
@@ -130,19 +123,7 @@ function MonthlySlider() {
         const { year, month, label } = getMonthYear(monthsBack)
         setLabel(label)
         if (marker) {
-            fetch(`${process.env.REACT_APP_BASE_URL}/ndvi/wcma_sample?year=${year}&month=${month}&lat=${marker.lat}&lon=${marker.lng}`)
-                .then(res => res.json())
-                .then(data => {
-                    if (data.inside) {
-                        setInfo({ ...data, label })
-                        fetchNdviSeries(year, month, marker.lat, marker.lng, 6)
-                    } else {
-                        setMarker(null)
-                        setInfo(null)
-                        setSeries({ labels: [], data: [] })
-                        setLoading(false)
-                    }
-                })
+            fetchRangeSeries(marker.lat, marker.lng, fromYear, fromMonth, toYear, toMonth, false)
         } else {
             setLoading(false)
         }
@@ -160,6 +141,9 @@ function MonthlySlider() {
 
     const handleRelease = () => {
         fetchNdvi(maxPast - offset)
+        if (secondMarker) {
+            fetchRangeSeries(secondMarker.lat, secondMarker.lng, fromYear, fromMonth, toYear, toMonth, true)
+        }
     }
 
     const chartData = {
@@ -173,7 +157,18 @@ function MonthlySlider() {
                 tension: 0.2,
                 borderColor: "#00589c",
                 backgroundColor: "#00589c"
-            }
+            },
+            ...(secondSeries.data.length > 0
+                ? [{
+                    label: "NDVI (Second Pixel)",
+                    data: secondSeries.data,
+                    borderWidth: 2,
+                    pointRadius: 3,
+                    tension: 0.2,
+                    borderColor: "red",
+                    backgroundColor: "red"
+                }]
+                : [])
         ]
     }
 
@@ -184,7 +179,7 @@ function MonthlySlider() {
             y: { min: -1, max: 1 }
         },
         plugins: {
-            legend: { display: false },
+            legend: { display: true },
             title: { display: false }
         }
     }
@@ -241,13 +236,8 @@ function MonthlySlider() {
                         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                         {tileUrl && <TileLayer url={tileUrl} opacity={0.6} />}
                         {boundary && <BoundaryLayer data={boundary} />}
-                        {marker && (
-                            <Marker position={marker}>
-                                <Popup>
-                                    <b>NDVI:</b> {info && info.ndvi !== null ? info.ndvi.toFixed(3) : "N/A"}
-                                </Popup>
-                            </Marker>
-                        )}
+                        {marker && <Marker position={marker}><Popup>First Pixel</Popup></Marker>}
+                        {secondMarker && <Marker position={secondMarker}><Popup>Second Pixel</Popup></Marker>}
                         <ClickHandler
                             onClick={(latlng) => {
                                 const { year, month, label } = getMonthYear(maxPast - offset)
@@ -256,26 +246,30 @@ function MonthlySlider() {
                                     .then(res => res.json())
                                     .then(data => {
                                         if (data.inside) {
-                                            setMarker(latlng)
-                                            setInfo({ ...data, label })
-                                            fetchNdviSeries(year, month, latlng.lat, latlng.lng, 6)
-                                        } else {
-                                            setMarker(null)
-                                            setInfo(null)
-                                            setSeries({ labels: [], data: [] })
-                                            setLoading(false)
+                                            if (compareMode && !secondMarker) {
+                                                setSecondMarker(latlng)
+                                                fetchRangeSeries(latlng.lat, latlng.lng, fromYear, fromMonth, toYear, toMonth, true)
+                                                setCompareMode(false)
+                                            } else {
+                                                setMarker(latlng)
+                                                setInfo({ ...data, label })
+                                                fetchRangeSeries(latlng.lat, latlng.lng, fromYear, fromMonth, toYear, toMonth, false)
+                                                setSecondMarker(null)
+                                                setSecondSeries({ labels: [], data: [] })
+                                                setSecondInfo(null)
+                                                setCompareMode(false)
+                                            }
                                         }
                                     })
                             }}
                         />
                     </MapContainer>
                 </div>
-                <div style={{ width: "260px", padding: "10px", borderLeft: "1px solid #ccc" }}>
+                <div style={{ width: "280px", padding: "10px", borderLeft: "1px solid #ccc" }}>
                     <h4>Info Panel</h4>
                     {info ? (
                         <div>
                             <p><b>Month:</b> {info.label}</p>
-                            <p><b>Place:</b> {info.lon.toFixed(5)}, {info.lat.toFixed(5)}</p>
                             <p><b>NDVI:</b> {info.ndvi !== null ? info.ndvi.toFixed(3) : "N/A"}</p>
                             <div style={{ marginBottom: "10px" }}>
                                 <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
@@ -309,7 +303,10 @@ function MonthlySlider() {
                                         <button
                                             onClick={() => {
                                                 if (marker) {
-                                                    fetchRangeSeries(marker.lat, marker.lng, fromYear, fromMonth, toYear, toMonth)
+                                                    fetchRangeSeries(marker.lat, marker.lng, fromYear, fromMonth, toYear, toMonth, false)
+                                                    if (secondMarker) {
+                                                        fetchRangeSeries(secondMarker.lat, secondMarker.lng, fromYear, fromMonth, toYear, toMonth, true)
+                                                    }
                                                 }
                                             }}
                                         >
@@ -328,6 +325,20 @@ function MonthlySlider() {
                                     <p><b>Difference:</b> {diffVal !== null ? diffVal.toFixed(3) : "N/A"}</p>
                                 </div>
                             )}
+                            <div style={{ marginTop: "10px" }}>
+                                {secondInfo ? (
+                                    <div style={{ color: "red" }}>
+                                        <p>Second pixel:</p>
+                                        <p>Initial NDVI ({secondInfo.firstLabel}): {secondInfo.initial !== null ? secondInfo.initial.toFixed(3) : "N/A"}</p>
+                                        <p>Last NDVI ({secondInfo.lastLabel}): {secondInfo.last !== null ? secondInfo.last.toFixed(3) : "N/A"}</p>
+                                        <p>Difference: {secondInfo.initial !== null && secondInfo.last !== null ? (secondInfo.last - secondInfo.initial).toFixed(3) : "N/A"}</p>
+                                    </div>
+                                ) : compareMode ? (
+                                    <p>Click another pixel to compare</p>
+                                ) : (
+                                    <button onClick={() => setCompareMode(true)}>Compare with ...</button>
+                                )}
+                            </div>
                         </div>
                     ) : (
                         <p>Click a pixel to see info</p>
