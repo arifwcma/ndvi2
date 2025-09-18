@@ -1,57 +1,70 @@
-const express = require("express");
-const bodyParser = require("body-parser");
-const ee = require("@google/earthengine");
-const fs = require("fs");
+const express = require("express")
+const bodyParser = require("body-parser")
+const ee = require("@google/earthengine")
+const fs = require("fs")
 
-const app = express();
+const app = express()
 
-const cors = require("cors");
-app.use(cors());
+const cors = require("cors")
+app.use(cors())
 
-app.use(bodyParser.json());
+app.use(bodyParser.json())
 
-const privateKey = JSON.parse(fs.readFileSync("service-account.json"));
+const privateKey = JSON.parse(fs.readFileSync("service-account.json"))
 
 ee.data.authenticateViaPrivateKey(privateKey, () => {
-  ee.initialize(null, null, () => {
-    console.log("✅ EE initialized with service account");
-  });
-});
+    ee.initialize(null, null, () => {
+        console.log("✅ EE initialized with service account")
+    })
+})
 
-const ndviRoutes = require("./routes/ndvi");
-app.use("/ndvi", ndviRoutes);
+const ndviRoutes = require("./routes/ndvi")
+app.use("/ndvi", ndviRoutes)
 
-const valueRoutes = require("./routes/value");
-app.use("/ndvi/value", valueRoutes);
+const valueRoutes = require("./routes/value")
+app.use("/ndvi/value", valueRoutes)
 
-const valueMonthRoutes = require("./routes/value_month");
-app.use("/ndvi/value_month", valueMonthRoutes);
+const valueMonthRoutes = require("./routes/value_month")
+app.use("/ndvi/value_month", valueMonthRoutes)
 
-const tilesTest = require("./routes/tiles_test");
-app.use("/test/tiles", tilesTest);
+const tilesTest = require("./routes/tiles_test")
+app.use("/test/tiles", tilesTest)
 
-const tilesToy = require("./routes/tiles_toy");
-app.use("/toy/tiles", tilesToy);
+const tilesToy = require("./routes/tiles_toy")
+app.use("/toy/tiles", tilesToy)
 
-const boundary = require("./routes/boundary");
-app.use("/boundary", boundary);
+const boundary = require("./routes/boundary")
+app.use("/boundary", boundary)
 
-const ndviMonth = require("./routes/ndvi_month");
-app.use("/ndvi/month", ndviMonth);
+const ndviMonth = require("./routes/ndvi_month")
+app.use("/ndvi/month", ndviMonth)
 
-const ndviRace = require("./routes/ndvi_race");
-app.use("/ndvi/race", ndviRace);
+const ndviRace = require("./routes/ndvi_race")
+app.use("/ndvi/race", ndviRace)
 
-const ndviWcma = require("./routes/ndvi_wcma");
-app.use("/ndvi/wcma", ndviWcma);
+const ndviWcma = require("./routes/ndvi_wcma")
+app.use("/ndvi/wcma", ndviWcma)
 
 const ndviWcmaMonthly = require("./routes/ndvi_wcma_monthly")
 app.use("/ndvi/wcma_monthly", ndviWcmaMonthly)
 
 app.use("/ndvi/wcma_sample", require("./routes/ndvi_wcma_sample"))
 
+const getWcmaMonthly = require("./routes/ndvi_wcma_monthly_fn")
+
+app.get('/xyz/ndvi/:year/:month/:z/:x/:y.png', async (req, res) => {
+    try {
+        const { year, month, z, x, y } = req.params
+        const j = await getWcmaMonthly(year, month)
+        const u = j.tileUrl.replace('{z}', z).replace('{x}', x).replace('{y}', y)
+        const tr = await fetch(u)
+        res.set('Content-Type', tr.headers.get('content-type') || 'image/png')
+        res.send(Buffer.from(await tr.arrayBuffer()))
+    } catch {
+        res.status(500).end()
+    }
+})
 
 app.listen(3001, () =>
-  console.log("Server running on http://localhost:3001")
-);
-
+    console.log("Server running on http://localhost:3001")
+)
