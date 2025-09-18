@@ -53,6 +53,7 @@ app.use("/ndvi/wcma_sample", require("./routes/ndvi_wcma_sample"))
 const getWcmaMonthly = require("./routes/ndvi_wcma_monthly_fn")
 
 app.get('/ndvi/xyz/:year/:month/:z/:x/:y.png', async (req, res) => {
+    console.log('Tile request:', req.params)
     try {
         const { year, month, z, x, y } = req.params
         const j = await getWcmaMonthly(year, month)
@@ -60,10 +61,17 @@ app.get('/ndvi/xyz/:year/:month/:z/:x/:y.png', async (req, res) => {
         const tr = await fetch(u)
         res.set('Content-Type', tr.headers.get('content-type') || 'image/png')
         res.send(Buffer.from(await tr.arrayBuffer()))
-    } catch {
+    } catch (e) {
+        console.error('Tile error:', e)
         res.status(500).end()
     }
 })
+
+
+app.get('/ndvi/xyz/test', (req, res) => {
+    res.send('XYZ test route is alive')
+})
+
 
 app.listen(3001, () =>
     console.log("Server running on http://localhost:3001")
