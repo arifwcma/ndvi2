@@ -52,7 +52,7 @@ app.use("/ndvi/wcma_sample", require("./routes/ndvi_wcma_sample"))
 
 const getWcmaMonthly = require("./routes/ndvi_wcma_monthly_fn")
 
-app.get('/xyz/ndvi/:year/:month/:z/:x/:y.png', async (req, res) => {
+app.get('/ndvi/xyz/:year/:month/:z/:x/:y.png', async (req, res) => {
     try {
         const { year, month, z, x, y } = req.params
         const j = await getWcmaMonthly(year, month)
