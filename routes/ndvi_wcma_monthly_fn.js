@@ -4,6 +4,9 @@ const path = require("path")
 
 async function getWcmaMonthly(year, month) {
     return new Promise((resolve, reject) => {
+        year = parseInt(year, 10)
+        month = parseInt(month, 10)
+
         const boundaryPath = path.join(__dirname, "data", "boundary_4326.geojson")
         const boundary = JSON.parse(fs.readFileSync(boundaryPath))
         const aoi = ee.FeatureCollection(boundary)
@@ -30,5 +33,6 @@ async function getWcmaMonthly(year, month) {
         })
     })
 }
+
 
 module.exports = getWcmaMonthly
