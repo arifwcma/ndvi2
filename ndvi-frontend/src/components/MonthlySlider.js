@@ -55,6 +55,7 @@ function MonthlySlider() {
     const [fromYear, setFromYear] = useState(initialFromYear)
     const [toMonth, setToMonth] = useState(new Date().getMonth() + 1)
     const [toYear, setToYear] = useState(new Date().getFullYear())
+    const [loading, setLoading] = useState(false)
 
     const getMonthYear = (monthsBack) => {
         const now = new Date()
@@ -82,6 +83,7 @@ function MonthlySlider() {
     }
 
     const fetchNdviSeries = (year, month, lat, lon, n = 6) => {
+        setLoading(true)
         const items = []
         for (let i = n - 1; i >= 0; i--) {
             const d = new Date(year, month - 1, 1)
@@ -106,10 +108,12 @@ function MonthlySlider() {
                     setToYear(lastYear)
                     setToMonth(lastMonth)
                 }
+                setLoading(false)
             })
     }
 
     const fetchRangeSeries = (lat, lon, fy, fm, ty, tm) => {
+        setLoading(true)
         const items = generateMonthsBetween(fy, fm, ty, tm)
         const url = (y, m) => `${process.env.REACT_APP_BASE_URL}/ndvi/wcma_sample?year=${y}&month=${m}&lat=${lat}&lon=${lon}`
         Promise.all(items.map(it => fetch(url(it.year, it.month)).then(r => r.json()).catch(() => ({ ndvi: null, inside: false }))))
@@ -117,10 +121,12 @@ function MonthlySlider() {
                 const labels = items.map(it => it.label)
                 const data = res.map(x => (x && x.inside && x.ndvi !== null ? x.ndvi : null))
                 setSeries({ labels, data })
+                setLoading(false)
             })
     }
 
     const fetchNdvi = (monthsBack) => {
+        setLoading(true)
         const { year, month, label } = getMonthYear(monthsBack)
         setLabel(label)
         if (marker) {
@@ -134,12 +140,17 @@ function MonthlySlider() {
                         setMarker(null)
                         setInfo(null)
                         setSeries({ labels: [], data: [] })
+                        setLoading(false)
                     }
                 })
+        } else {
+            setLoading(false)
         }
         fetch(`${process.env.REACT_APP_BASE_URL}/ndvi/wcma_monthly?year=${year}&month=${month}`)
             .then(res => res.json())
-            .then(data => setTileUrl(data.tileUrl))
+            .then(data => {
+                setTileUrl(data.tileUrl)
+            })
     }
 
     useEffect(() => {
@@ -252,6 +263,7 @@ function MonthlySlider() {
                                             setMarker(null)
                                             setInfo(null)
                                             setSeries({ labels: [], data: [] })
+                                            setLoading(false)
                                         }
                                     })
                             }}
@@ -307,7 +319,7 @@ function MonthlySlider() {
                                 </div>
                             </div>
                             <div style={{ height: 180 }}>
-                                <Line data={chartData} options={chartOptions} />
+                                {loading ? <p>Loading...</p> : <Line data={chartData} options={chartOptions} />}
                             </div>
                             {series.labels.length > 1 && (
                                 <div style={{ marginTop: "10px" }}>
