@@ -39,6 +39,11 @@ function ClickHandler({ onClick }) {
 }
 
 function MonthlySlider() {
+    const now = new Date()
+    now.setMonth(now.getMonth() - 5)
+    const initialFromMonth = now.getMonth() + 1
+    const initialFromYear = now.getFullYear()
+
     const [tileUrl, setTileUrl] = useState(null)
     const [boundary, setBoundary] = useState(null)
     const [offset, setOffset] = useState(maxPast)
@@ -46,9 +51,8 @@ function MonthlySlider() {
     const [marker, setMarker] = useState(null)
     const [label, setLabel] = useState("")
     const [series, setSeries] = useState({ labels: [], data: [] })
-
-    const [fromMonth, setFromMonth] = useState(1)
-    const [fromYear, setFromYear] = useState(2019)
+    const [fromMonth, setFromMonth] = useState(initialFromMonth)
+    const [fromYear, setFromYear] = useState(initialFromYear)
     const [toMonth, setToMonth] = useState(new Date().getMonth() + 1)
     const [toYear, setToYear] = useState(new Date().getFullYear())
 
@@ -261,51 +265,50 @@ function MonthlySlider() {
                             <p><b>Month:</b> {info.label}</p>
                             <p><b>Place:</b> {info.lon.toFixed(5)}, {info.lat.toFixed(5)}</p>
                             <p><b>NDVI:</b> {info.ndvi !== null ? info.ndvi.toFixed(3) : "N/A"}</p>
-                            {/* Controls ABOVE the plot */}
                             <div style={{ marginBottom: "10px" }}>
-                                <div>
-                                    From{" "}
-                                    <select value={fromMonth} onChange={e => setFromMonth(parseInt(e.target.value))}>
-                                        {monthNames.map((m, i) => (
-                                            <option key={i+1} value={i+1}>{m}</option>
-                                        ))}
-                                    </select>{" "}
-                                    <select value={fromYear} onChange={e => setFromYear(parseInt(e.target.value))}>
-                                        {yearRange.map(y => (
-                                            <option key={y} value={y}>{y}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div>
-                                    To{" "}
-                                    <select value={toMonth} onChange={e => setToMonth(parseInt(e.target.value))}>
-                                        {monthNames.map((m, i) => (
-                                            <option key={i+1} value={i+1}>{m}</option>
-                                        ))}
-                                    </select>{" "}
-                                    <select value={toYear} onChange={e => setToYear(parseInt(e.target.value))}>
-                                        {yearRange.map(y => (
-                                            <option key={y} value={y}>{y}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div>
-                                    <button
-                                        onClick={() => {
-                                            if (marker) {
-                                                fetchRangeSeries(marker.lat, marker.lng, fromYear, fromMonth, toYear, toMonth)
-                                            }
-                                        }}
-                                    >
-                                        Show
-                                    </button>
+                                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                        <span style={{ width: "40px" }}>From</span>
+                                        <select value={fromMonth} onChange={e => setFromMonth(parseInt(e.target.value))} style={{ flex: 1 }}>
+                                            {monthNames.map((m, i) => (
+                                                <option key={i+1} value={i+1}>{m}</option>
+                                            ))}
+                                        </select>
+                                        <select value={fromYear} onChange={e => setFromYear(parseInt(e.target.value))} style={{ flex: 1 }}>
+                                            {yearRange.map(y => (
+                                                <option key={y} value={y}>{y}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                        <span style={{ width: "40px" }}>To</span>
+                                        <select value={toMonth} onChange={e => setToMonth(parseInt(e.target.value))} style={{ flex: 1 }}>
+                                            {monthNames.map((m, i) => (
+                                                <option key={i+1} value={i+1}>{m}</option>
+                                            ))}
+                                        </select>
+                                        <select value={toYear} onChange={e => setToYear(parseInt(e.target.value))} style={{ flex: 1 }}>
+                                            {yearRange.map(y => (
+                                                <option key={y} value={y}>{y}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <button
+                                            onClick={() => {
+                                                if (marker) {
+                                                    fetchRangeSeries(marker.lat, marker.lng, fromYear, fromMonth, toYear, toMonth)
+                                                }
+                                            }}
+                                        >
+                                            Show
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-                            {/* Plot */}
                             <div style={{ height: 180 }}>
                                 <Line data={chartData} options={chartOptions} />
                             </div>
-                            {/* Summary BELOW the plot */}
                             {series.labels.length > 1 && (
                                 <div style={{ marginTop: "10px" }}>
                                     <p><b>Initial NDVI ({firstLabel}):</b> {firstVal !== null ? firstVal.toFixed(3) : "N/A"}</p>
