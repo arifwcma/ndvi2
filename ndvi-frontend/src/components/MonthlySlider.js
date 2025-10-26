@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, useCallback } from "react"
 import { MapContainer, TileLayer, GeoJSON, useMap, Marker, Popup } from "react-leaflet"
 import { Line } from "react-chartjs-2"
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from "chart.js"
@@ -39,11 +39,6 @@ function ClickHandler({ onClick }) {
 }
 
 function MonthlySlider() {
-    const now = new Date()
-    now.setMonth(now.getMonth() - 5)
-    const initialFromMonth = now.getMonth() + 1
-    const initialFromYear = now.getFullYear()
-
     const [tileUrl, setTileUrl] = useState(null)
     const [boundary, setBoundary] = useState(null)
     const [offset, setOffset] = useState(maxPast)
@@ -51,19 +46,20 @@ function MonthlySlider() {
     const [marker, setMarker] = useState(null)
     const [label, setLabel] = useState("")
     const [series, setSeries] = useState({ labels: [], data: [] })
-    const [fromMonth, setFromMonth] = useState(initialFromMonth)
-    const [fromYear, setFromYear] = useState(initialFromYear)
-    const [toMonth, setToMonth] = useState(new Date().getMonth() + 1)
-    const [toYear, setToYear] = useState(new Date().getFullYear())
+    const [fromMonth, setFromMonth] = useState(null)
+    const [fromYear, setFromYear] = useState(null)
+    const [toMonth, setToMonth] = useState(null)
+    const [toYear, setToYear] = useState(null)
     const [loading, setLoading] = useState(false)
-
     const [compareMode, setCompareMode] = useState(false)
     const [secondMarker, setSecondMarker] = useState(null)
     const [secondSeries, setSecondSeries] = useState({ labels: [], data: [] })
     const [secondInfo, setSecondInfo] = useState(null)
+    const [latestYear, setLatestYear] = useState(new Date().getFullYear())
+    const [latestMonth, setLatestMonth] = useState(new Date().getMonth() + 1)
 
     const getMonthYear = (monthsBack) => {
-        const now = new Date()
+        const now = new Date(latestYear, latestMonth - 1, 1)
         now.setMonth(now.getMonth() - monthsBack)
         return {
             year: now.getFullYear(),
@@ -118,7 +114,7 @@ function MonthlySlider() {
             })
     }
 
-    const fetchNdvi = (monthsBack) => {
+    const fetchNdvi = useCallback((monthsBack) => {
         setLoading(true)
         const { year, month, label } = getMonthYear(monthsBack)
         setLabel(label)
@@ -132,12 +128,40 @@ function MonthlySlider() {
             .then(data => {
                 setTileUrl(data.tileUrl)
             })
-    }
+    }, [marker, fromYear, fromMonth, toYear, toMonth])
+
 
     useEffect(() => {
-        fetchNdvi(0)
-        fetch("/data/boundary_4326.geojson").then(res => res.json()).then(data => setBoundary(data))
-    }, [])
+        const now = new Date()
+        let y = now.getFullYear()
+        let m = now.getMonth() + 1
+
+        const checkMonth = (yy, mm) => {
+            return fetch(`${process.env.REACT_APP_BASE_URL}/ndvi/count_images?year=${yy}&month=${mm}`)
+                .then(r => r.json())
+                .then(d => {
+                    if (d.count >= 100) {
+                        console.log(`✅ Using ${yy}-${mm}: found ${d.count} tiles`)
+                        setLatestYear(yy)
+                        setLatestMonth(mm)
+                        return { yy, mm }
+                    } else {
+                        console.warn(`⚠️ Only ${d.count} tiles for ${yy}-${mm}, falling back...`)
+                        const prevMonth = mm === 1 ? 12 : mm - 1
+                        const prevYear = mm === 1 ? yy - 1 : yy
+                        return checkMonth(prevYear, prevMonth)
+                    }
+                })
+        }
+
+        checkMonth(y, m).then(() => {
+            fetchNdvi(0)
+            fetch("/data/boundary_4326.geojson")
+                .then(res => res.json())
+                .then(data => setBoundary(data))
+        })
+    }, [fetchNdvi])
+
 
     const handleRelease = () => {
         fetchNdvi(maxPast - offset)
@@ -175,13 +199,8 @@ function MonthlySlider() {
     const chartOptions = {
         responsive: true,
         maintainAspectRatio: false,
-        scales: {
-            y: { min: -1, max: 1 }
-        },
-        plugins: {
-            legend: { display: true },
-            title: { display: false }
-        }
+        scales: { y: { min: -1, max: 1 } },
+        plugins: { legend: { display: true }, title: { display: false } }
     }
 
     const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
@@ -206,9 +225,7 @@ function MonthlySlider() {
                         fetchNdvi(maxPast - newVal)
                     }}
                     disabled={offset === 0}
-                >
-                    -
-                </button>
+                >-</button>
                 <input
                     type="range"
                     min="0"
@@ -226,9 +243,7 @@ function MonthlySlider() {
                         fetchNdvi(maxPast - newVal)
                     }}
                     disabled={offset === maxPast}
-                >
-                    +
-                </button>
+                >+</button>
             </div>
             <div style={{ display: "flex" }}>
                 <div style={{ flex: 1 }}>
@@ -275,12 +290,12 @@ function MonthlySlider() {
                                 <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                                     <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                                         <span style={{ width: "40px" }}>From</span>
-                                        <select value={fromMonth} onChange={e => setFromMonth(parseInt(e.target.value))} style={{ flex: 1 }}>
+                                        <select value={fromMonth || ""} onChange={e => setFromMonth(parseInt(e.target.value))} style={{ flex: 1 }}>
                                             {monthNames.map((m, i) => (
                                                 <option key={i+1} value={i+1}>{m}</option>
                                             ))}
                                         </select>
-                                        <select value={fromYear} onChange={e => setFromYear(parseInt(e.target.value))} style={{ flex: 1 }}>
+                                        <select value={fromYear || ""} onChange={e => setFromYear(parseInt(e.target.value))} style={{ flex: 1 }}>
                                             {yearRange.map(y => (
                                                 <option key={y} value={y}>{y}</option>
                                             ))}
@@ -288,12 +303,12 @@ function MonthlySlider() {
                                     </div>
                                     <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                                         <span style={{ width: "40px" }}>To</span>
-                                        <select value={toMonth} onChange={e => setToMonth(parseInt(e.target.value))} style={{ flex: 1 }}>
+                                        <select value={toMonth || ""} onChange={e => setToMonth(parseInt(e.target.value))} style={{ flex: 1 }}>
                                             {monthNames.map((m, i) => (
                                                 <option key={i+1} value={i+1}>{m}</option>
                                             ))}
                                         </select>
-                                        <select value={toYear} onChange={e => setToYear(parseInt(e.target.value))} style={{ flex: 1 }}>
+                                        <select value={toYear || ""} onChange={e => setToYear(parseInt(e.target.value))} style={{ flex: 1 }}>
                                             {yearRange.map(y => (
                                                 <option key={y} value={y}>{y}</option>
                                             ))}
@@ -309,9 +324,7 @@ function MonthlySlider() {
                                                     }
                                                 }
                                             }}
-                                        >
-                                            Show
-                                        </button>
+                                        >Show</button>
                                     </div>
                                 </div>
                             </div>
