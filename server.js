@@ -72,6 +72,10 @@ app.get('/ndvi/xyz/test', (req, res) => {
     res.send('XYZ test route is alive')
 })
 
+const countImagesRoute = require("./routes/count_images")
+app.use("/ndvi/count_images", countImagesRoute)
+
+
 
 app.listen(3001, () =>
     console.log("Server running on http://localhost:3001")
